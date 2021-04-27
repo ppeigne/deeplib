@@ -21,10 +21,10 @@ This library is not made to replace deep learning frameworks in any way, but non
 ### *Activations [in progress]*
 - *Sigmoid*
 - *Thanh*
-- *ReLu*
-- *SRelu*
-- *LRelu*
-- *ELu*
+- *ReLU*
+- *SRelU*
+- *LRelU*
+- *ELU*
 
 ### *CNN [coming soon]*
 - *Convolution*
