@@ -14,14 +14,12 @@ class Layer():
     def _select_initilization(self):
         raise NotImplementedError
 
-
 class DeepLayer(Layer):
-    def __init__(self, n_units, activation='relu', dropout=0):
+    def __init__(self, n_units, activation='relu'):
         self.n_units = n_units
         self.activation = self._select_activation(activation)
+        self.activation_prime = self._select_activation_prime(activation)
         self.initialization = self._select_initialization(activation)
-        self.dropout_rate = dropout
-
 
     def _select_activation(self, activation):
         activations = {
@@ -35,10 +33,13 @@ class DeepLayer(Layer):
         }
         return activations[activation]
 
+    def _select_activation_prime(self, activation):
+        pass # FIXME
+
     def _select_initialization(self, activation):
         initializations = {
             'sigmoid': initialize_tanh,
-        #    'tanh'; initialize_tanh,
+            # 'tanh'; initialize_tanh,
             'relu': initialize_relu
             # 'leaky_relu': ,
             # 'lrelu': ,
@@ -49,24 +50,45 @@ class DeepLayer(Layer):
 
 
 class Dense(DeepLayer):
-    #def _init__(self)
+    def _init__(self, n_units, activation):
+        super().__init__(self, n_units, activation)
+        self.params = None
+        self.grads = None
 
     def _generate_params(self, input_dim):
-        parameters = {
+        self.params = {
             'W': self.initialization((self.n_units, input_dim)),
             'b': np.zeros(1),
             'Z': np.zeros(self.n_units),
             'A': np.zeros(self.n_units),
             'g': self.activation
         }
-        gradients = {
+        self.grads = {
             'dW': np.zeros((self.n_units, input_dim)),
             'db': np.zeros(1),
             'dZ': np.zeros(self.n_units),
             'dA': np.zeros(self.n_units),
             'dg': self.activation # FIXME 
         } 
-        return parameters, gradients
+        # return parameters, gradients
+
+    def forward(self, A_prev):
+        self.A_prev = A_prev
+        self.params['Z'] = self.params['W'] @ a_prev + self.params['b']
+        self.params['A'] = self.activation(self.params['Z'])
+        return self.params['A'] # IS IT NECESSARY ?
+
+    def backward(self, dA, m):
+        self.grads['dZ'] = dA * self.activation_prime(self.params['Z']) 
+        self.grads['dW'] = self.grads['dZ'] @ self.A_prev.T / m 
+        self.grads['db'] = np.sum(self.grads['dZ'], axis=1, keepdims=True) / m
+        self.grads['dA'] = self.params['W'].T @ self.grads['dZ']
+        return self.grads['dA'] # IS IT NECESSARY ?
+ 
+    def update(self, update_rule):
+        for k in self.params.keys():
+            self.params[k] = update_rule(self.params[k], self.grads[f"d{k}"])
+
 
 class Flatten(Layer):
     def __init__(self, input_dim: Tuple[int, int]) -> None:
@@ -85,34 +107,25 @@ class Input(Layer):
 class Network():
     def __init__(self, architecture):
         self.depth = len(architecture)
-        self.params, self.gradients = self._generate_params(architecture)
+        self._generate_params(architecture)
 
     def _generate_params(self, architecture):
-        params = []
-        gradients = []
         for l in range(self.depth):
             input_dim = architecture[l-1].n_units
-            tmp_params, tmp_gradients = architecture[l]._generate_params(input_dim)
-            params.append(tmp_params)
-            gradients.append(tmp_gradients)
-            # params.append(architecture[l]._generate_params(input_dim))
-        return params, gradients  
+            architecture[l]._generate_params(input_dim)
 
     def forward(self, X):
-        self.params[0]['A'] = X
+        layer_input = X
         for l in range(1, self.depth):
-            self.params[l]['Z'] = self.params[l]['W'] @ self.params[l-1]['A'] + self.params[l]['b']
-            self.params[l]['A'] = self.params[l]['g'](self.params[l]['Z'])
-        return self.params[self.depth-1]['A']
+            layer_input = self.architecture[l].forward(layer_input)
+        return layer_input
     
     def gradient(self, X, y, result):
         _, m = X.shape
-        self.gradients[self.depth-1]['dA'] =  self.params[self.depth-1]['A']# FIXME
+        dA = # FIXME
         for l in range(self.depth, 0):
-            self.gradients[l]['dZ'] = self.gradients[l]['dA'] * self.gradients[l]['dg'](self.params[l]['Z']) 
-            self.gradients[l]['dW'] = (self.gradients[l]['dZ'] @ self.params[l-1]['A'].T) / m 
-            self.gradients[l]['db'] = (np.sum(self.gradients[l]['dZ'], axis=1, keepdims=True)) / m
-            self.gradients[l-1]['dA'] = self.params[l]['W'].T @ self.gradients[l]['dZ']
+            dA = self.architecture[l].backward(dA, m)
+        return dA
 
 
             
