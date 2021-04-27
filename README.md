@@ -13,37 +13,37 @@ This library is not made to replace deep learning frameworks in any way, but non
 
 ## Layers
 ### *MLP [in progress]*
-- *Dense*
-- *Dropout*
-- *Blocks*
-- *BatchNormalization*
+- [ ] Dense
+- [ ] Dropout
+- [ ] Blocks
+- [ ] BatchNormalization
 
 ### *Activations [in progress]*
-- *Sigmoid*
-- *Thanh*
-- *ReLU*
-- *SRelU*
-- *LRelU*
-- *ELU*
+- [ ] Sigmoid
+- [ ] Thanh
+- [ ] ReLU
+- [ ] SRelU
+- [ ] LRelU
+- [ ] ELU
 
 ### *CNN [coming soon]*
-- *Convolution*
-- *MaxPooling*
-- *AvgPooling*
+- [ ] Convolution
+- [ ] MaxPooling
+- [ ] AvgPooling
 
 ### *RNN [coming later]*
 
 ## *Optimizers [in progress]*
-- *Gradient Descent*
-- *Batch Gradient Descent*
-- *Stochastic Gradient Descent*
-- *Momentum*
-- *Nesterov Momentum*
-- *RMSProp*
-- *AdaGrad*
-- *AdaDelta*
-- *Adam*
-- *NAdam*
+- [ ] Gradient Descent
+- [ ] Batch Gradient Descent
+- [ ] Stochastic Gradient Descent
+- [ ] Momentum
+- [ ] Nesterov Momentum
+- [ ] RMSProp
+- [ ] AdaGrad
+- [ ] AdaDelta
+- [ ] Adam
+- [ ] NAdam
 
 
 # Installation
