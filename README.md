@@ -22,9 +22,9 @@ This library is not made to replace deep learning frameworks in any way, but non
 - [ ] Sigmoid
 - [ ] Thanh
 - [ ] ReLU
-- [ ] SRelU
-- [ ] LRelU
-- [ ] ELU
+- [ ] Shifted ReLU
+- [ ] Leaky ReLU
+- [ ] Exponential LU
 
 ### *CNN [coming soon]*
 - [ ] Convolution
