@@ -6,3 +6,4 @@ def initialize_relu(shape: (int, int)) -> np.ndarray:
 
 def initialize_tanh(shape: (int, int)) -> np.ndarray:
     return np.random.random(shape) * np.sqrt(1 / shape[0])
+    

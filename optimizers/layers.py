@@ -1,3 +1,4 @@
+import numpy as np
 from typing import Tuple
 from initialization import *
 from activations import *
@@ -74,7 +75,7 @@ class Dense(DeepLayer):
 
     def forward(self, A_prev):
         self.A_prev = A_prev
-        self.params['Z'] = self.params['W'] @ a_prev + self.params['b']
+        self.params['Z'] = self.params['W'] @ A_prev + self.params['b']
         self.params['A'] = self.params['g'](self.params['Z'])
         return self.params['A'] # IS IT NECESSARY ?
 
@@ -103,23 +104,38 @@ class Input(Layer):
         gradients = {'dA': np.zeros(self.n_units)}
         return parameters, gradients
 
+class Output(Layer):
+    def __init__(self, input_dim: int) -> None:
+        self.n_units = input_dim
+
+    def _generate_params(self, input_dim):
+        parameters = {'A': np.zeros(self.n_units)}
+        gradients = {'dA': np.zeros(self.n_units)}
+        return parameters, gradients
+    
+    def forward(self, x):
+        return 1
+
+    def backward(self):
+        return 1
 
 class Network():
     def __init__(self, architecture):
         self.depth = len(architecture)
-        self.params, self.gradients = self._generate_params(architecture)
+        self.architecture = architecture
+        self.params, self.gradients = self._generate_params()
 
     # def _generate_params(self, architecture):
     #     for l in range(self.depth):
     #         input_dim = architecture[l-1].n_units
     #         architecture[l]._generate_params(input_dim)
 
-    def _generate_params(self, architecture):
+    def _generate_params(self):
         params = []
         gradients = []
         for l in range(self.depth):
-            input_dim = architecture[l-1].n_units
-            tmp_params, tmp_gradients = architecture[l]._generate_params(input_dim)
+            input_dim = self.architecture[l-1].n_units
+            tmp_params, tmp_gradients = self.architecture[l]._generate_params(input_dim)
             params.append(tmp_params)
             gradients.append(tmp_gradients)
         return params, gradients  
@@ -132,7 +148,7 @@ class Network():
     
     def gradient(self, X, y, result):
         _, m = X.shape
-        dA = self.architecture[self.depth - 1].gradient # FIXME
+        dA = self.architecture[self.depth - 1].backward()#gradient # FIXME
         for l in range(self.depth - 1, 0):
             dA = self.architecture[l].backward(dA, m)
         return dA
@@ -142,9 +158,10 @@ class Network():
     
 
 x = [Input(12), 
-    Dense(2, activation='sigmoid', dropout=.2), 
+    Dense(2, activation='sigmoid'), 
     Dense(8), 
-    Dense(2, activation='sigmoid', dropout=.5)]
+    Dense(2, activation='sigmoid'),
+    Output(3)]
 
 model = Network(x)
 #for i,p in enumerate(model.params):
