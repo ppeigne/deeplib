@@ -3,7 +3,7 @@ from initialization import *
 from activations import *
 
 class Layer():
-    def __init__(self, n_units, activation):#, initialization=None):
+    def __init__(self, n_units):#, initialization=None):
         self.n_units = n_units
         #self.activation = self._select_activation(activation)
         #self.initialization = initialization if initialization else self._select_initialization(self)
@@ -11,7 +11,7 @@ class Layer():
     def _select_activation(self, activation):
         raise NotImplementedError
 
-    def _select_initilization(self):
+    def _select_initilization(self, activation):
         raise NotImplementedError
 
 class DeepLayer(Layer):
@@ -70,24 +70,24 @@ class Dense(DeepLayer):
             'dA': np.zeros(self.n_units),
             'dg': self.activation # FIXME 
         } 
-        # return parameters, gradients
+        return self.params, self.grads
 
     def forward(self, A_prev):
         self.A_prev = A_prev
         self.params['Z'] = self.params['W'] @ a_prev + self.params['b']
-        self.params['A'] = self.activation(self.params['Z'])
+        self.params['A'] = self.params['g'](self.params['Z'])
         return self.params['A'] # IS IT NECESSARY ?
 
     def backward(self, dA, m):
-        self.grads['dZ'] = dA * self.activation_prime(self.params['Z']) 
+        self.grads['dZ'] = dA * self.params['dg'](self.params['Z']) 
         self.grads['dW'] = self.grads['dZ'] @ self.A_prev.T / m 
         self.grads['db'] = np.sum(self.grads['dZ'], axis=1, keepdims=True) / m
         self.grads['dA'] = self.params['W'].T @ self.grads['dZ']
         return self.grads['dA'] # IS IT NECESSARY ?
  
-    def update(self, update_rule):
-        for k in self.params.keys():
-            self.params[k] = update_rule(self.params[k], self.grads[f"d{k}"])
+    # def update(self, update_rule):
+    #     for k in self.params.keys():
+    #         self.params[k] = update_rule(self.params[k], self.grads[f"d{k}"])
 
 
 class Flatten(Layer):
@@ -107,12 +107,22 @@ class Input(Layer):
 class Network():
     def __init__(self, architecture):
         self.depth = len(architecture)
-        self._generate_params(architecture)
+        self.params, self.gradients = self._generate_params(architecture)
+
+    # def _generate_params(self, architecture):
+    #     for l in range(self.depth):
+    #         input_dim = architecture[l-1].n_units
+    #         architecture[l]._generate_params(input_dim)
 
     def _generate_params(self, architecture):
+        params = []
+        gradients = []
         for l in range(self.depth):
             input_dim = architecture[l-1].n_units
-            architecture[l]._generate_params(input_dim)
+            tmp_params, tmp_gradients = architecture[l]._generate_params(input_dim)
+            params.append(tmp_params)
+            gradients.append(tmp_gradients)
+        return params, gradients  
 
     def forward(self, X):
         layer_input = X
@@ -122,8 +132,8 @@ class Network():
     
     def gradient(self, X, y, result):
         _, m = X.shape
-        dA = # FIXME
-        for l in range(self.depth, 0):
+        dA = self.architecture[self.depth - 1].gradient # FIXME
+        for l in range(self.depth - 1, 0):
             dA = self.architecture[l].backward(dA, m)
         return dA
 
