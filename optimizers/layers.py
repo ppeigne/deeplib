@@ -15,6 +15,16 @@ class Layer():
     def _select_initilization(self, activation):
         raise NotImplementedError
 
+# class Activation(Layer):
+#     def __init__(self, activation='relu'):
+#         self.activation = self._select_activation(activation)
+
+#     def _select_activation(self, activation):
+#         activations = {
+#             'relu': relu
+#         }
+#         return activations[activation]
+
 class DeepLayer(Layer):
     def __init__(self, n_units, activation='relu'):
         self.n_units = n_units
@@ -24,7 +34,7 @@ class DeepLayer(Layer):
 
     def _select_activation(self, activation):
         activations = {
-            'sigmoid': sigmoid,
+            # 'sigmoid': sigmoid,
             # 'tanh'; ,
             'relu': relu
             # 'leaky_relu': leaky_relu,
@@ -35,11 +45,20 @@ class DeepLayer(Layer):
         return activations[activation]
 
     def _select_activation_prime(self, activation):
-        pass # FIXME
+        activations = {
+            # 'sigmoid': sigmoid_prime,
+            # 'tanh'; ,
+            'relu': relu_prime
+            # 'leaky_relu': leaky_relu,
+            # 'lrelu': ,
+            # 'prelu': ,
+            # 'elu': ,
+        }
+        return activations[activation]
 
     def _select_initialization(self, activation):
         initializations = {
-            'sigmoid': initialize_tanh,
+            # 'sigmoid': initialize_tanh,
             # 'tanh'; initialize_tanh,
             'relu': initialize_relu
             # 'leaky_relu': ,
@@ -158,9 +177,9 @@ class Network():
     
 
 x = [Input(12), 
-    Dense(2, activation='sigmoid'), 
+    Dense(2, activation='relu'), 
     Dense(8), 
-    Dense(2, activation='sigmoid'),
+    Dense(2, activation='relu'),
     Output(3)]
 
 model = Network(x)

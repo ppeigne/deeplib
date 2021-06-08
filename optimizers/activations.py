@@ -8,3 +8,21 @@ def relu(z: np.ndarray) -> np.ndarray:
 
 def leaky_relu(z: np.ndarray, rate: float = .01) -> np.ndarray:
     return np.maximum(z * rate, z)
+
+# def sigmoid(z):
+#     return 1 / (1 + np.exp(-z))
+
+# def relu(z):
+#     return np.maximum(0, z)
+
+# def leaky_relu(z, rate=.01):
+#     return np.maximum(z * rate, z)
+
+# def sigmoid_prime(z):
+#     return 1 / (1 + np.exp(-z))
+
+def relu_prime(z):
+    return (z > 0) * 1
+
+# def leaky_relu(z, rate=.01):
+#     return np.maximum(z * rate, z)
