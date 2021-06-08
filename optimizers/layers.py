@@ -1,7 +1,9 @@
 import numpy as np
 from typing import Tuple
-from optimizers.initialization import *
-from optimizers.activations import *
+from initialization import  * #initialize_relu
+from activations import * #relu, relu_prime
+from optimizers import Optimizer_
+
 
 class Layer():
     def __init__(self, n_units):#, initialization=None):
@@ -13,15 +15,6 @@ class Layer():
     def _select_initilization(self, activation):
         raise NotImplementedError
 
-# class Activation(Layer):
-#     def __init__(self, activation='relu'):
-#         self.activation = self._select_activation(activation)
-
-#     def _select_activation(self, activation):
-#         activations = {
-#             'relu': relu
-#         }
-#         return activations[activation]
 
 class DeepLayer(Layer):
     def __init__(self, n_units, activation='relu'):
@@ -32,24 +25,27 @@ class DeepLayer(Layer):
 
     def _select_activation(self, activation):
         activations = {
-            # 'sigmoid': sigmoid,
-            'relu': relu
+            'sigmoid': sigmoid,
+            'relu': relu,
+            # 'softmax': softmax
             # 'leaky_relu': leaky_relu,
         }
         return activations[activation]
 
     def _select_activation_prime(self, activation):
         activations = {
-            # 'sigmoid': sigmoid_prime,
-            'relu': relu_prime
+            'sigmoid': sigmoid_prime,
+            'relu': relu_prime,
+            # 'softmax': softmax_prime
             # 'leaky_relu': leaky_relu,
         }
         return activations[activation]
 
     def _select_initialization(self, activation):
         initializations = {
-            # 'sigmoid': initialize_tanh,
-            'relu': initialize_relu
+            'sigmoid': initialize_sigmoid,
+            'relu': initialize_relu,
+            'softmax': initialize_relu # FIXME
             # 'leaky_relu': ,
         }
         return initializations[activation]
@@ -82,14 +78,14 @@ class Dense(DeepLayer):
         self.A_prev = A_prev
         self.params['Z'] = self.params['W'] @ A_prev + self.params['b']
         self.params['A'] = self.params['g'](self.params['Z'])
-        return self.params['A'] # IS IT NECESSARY ?
+        return self.params['A'] 
 
     def backward(self, dA, m):
         self.grads['dZ'] = dA * self.params['dg'](self.params['Z']) 
         self.grads['dW'] = self.grads['dZ'] @ self.A_prev.T / m 
         self.grads['db'] = np.sum(self.grads['dZ'], axis=1, keepdims=True) / m
         self.grads['dA'] = self.params['W'].T @ self.grads['dZ']
-        return self.grads['dA'] # IS IT NECESSARY ?
+        return self.grads['dA']
  
     # def update(self, update_rule):
     #     for k in self.params.keys():
@@ -133,7 +129,7 @@ class Network():
 
     def _select_loss(self, loss):
         losses = {
-            'cross_entropy' : (None, None)
+            'cross_entropy' : (None, lambda y_true, y_pred: y_true - y_pred)
         }
         return losses[loss]  
 
@@ -152,6 +148,9 @@ class Network():
             gradients.append(tmp_gradients)
         return params, gradients  
 
+    def predict(self, X):
+        return self.forward(X)
+        
     def forward(self, X):
         layer_input = X
         for l in range(1, self.depth):
@@ -165,23 +164,33 @@ class Network():
             dA = self.architecture[l].backward(dA, m)
         return dA
 
+    def train(self, X, y, verbose=False):
+        optimizer = Optimizer_()
+        optimizer.optimize(self, X, y)
+
+
 
             
     
 
-architecture = [Input(12), 
+architecture = [Input(3), 
                 Dense(2, activation='relu'), 
                 Dense(8), 
-                Dense(2, activation='relu'),
-                Output(3)]
+                Dense(1, activation='sigmoid')] 
 
 model = Network(architecture)
 
-X = np.random.random((12,10)) * 10
+X = np.array([[1, 0, 1],
+              [3, 2, 2],
+              [0, 9, 1]])
 res = model.forward(X)
 print(res)
 
-y_ = (np.random.random((2, 10)) > .5) * 1
+y_ = np.array([[1], [0], [1]])
 
 g = model.gradient(X, y_, res)
 print(g)
+
+model.train(X, y_)
+
+print(model.predict(X))
