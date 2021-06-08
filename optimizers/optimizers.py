@@ -1,3 +1,5 @@
+import numpy as np
+
 class Optimizer_():
     def __init__(self,batch_size=-1):
         #self.model = model

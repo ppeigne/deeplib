@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Tuple
-from initialization import *
-from activations import *
+from optimizers.initialization import *
+from optimizers.activations import *
 
 class Layer():
     def __init__(self, n_units):#, initialization=None):
@@ -176,21 +176,13 @@ class Network():
             
     
 
-x = [Input(12), 
-    Dense(2, activation='relu'), 
-    Dense(8), 
-    Dense(2, activation='relu'),
-    Output(3)]
+architecture = [Input(12), 
+                Dense(2, activation='relu'), 
+                Dense(8), 
+                Dense(2, activation='relu'),
+                Output(3)]
 
-model = Network(x)
-
-
-#for i,p in enumerate(model.params):
-    # print(f"W[{i}]",p['W'].shape)
-    # print(f"A[{i}]",p['A'].shape)
-    # print(i)
-    # print(p)
-
+model = Network(architecture)
 
 X = np.random.random((12,10)) * 10
 res = model.forward(X)
