@@ -164,6 +164,8 @@ x = [Input(12),
     Output(3)]
 
 model = Network(x)
+
+
 #for i,p in enumerate(model.params):
     # print(f"W[{i}]",p['W'].shape)
     # print(f"A[{i}]",p['A'].shape)
@@ -178,3 +180,4 @@ print(res)
 y_ = (np.random.random((2, 10)) > .5) * 1
 
 g = model.gradient(X, y_, res)
+print(g)
