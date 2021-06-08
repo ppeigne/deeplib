@@ -99,6 +99,8 @@ class Flatten(Layer):
 class Input(Layer):
     def __init__(self, n_units: int) -> None:
         self.n_units = n_units
+        # self.params, self.gradients = self._generate_params()
+
     
     def _generate_params(self, input_dim):
         parameters = {'A': np.zeros(self.n_units)}
@@ -141,7 +143,8 @@ class Network():
     def _generate_params(self):
         params = []
         gradients = []
-        for l in range(self.depth):
+        for l in range(1, self.depth):
+            print(l)
             input_dim = self.architecture[l-1].n_units
             tmp_params, tmp_gradients = self.architecture[l]._generate_params(input_dim)
             params.append(tmp_params)
@@ -150,7 +153,7 @@ class Network():
 
     def predict(self, X):
         return self.forward(X)
-        
+
     def forward(self, X):
         layer_input = X
         for l in range(1, self.depth):
@@ -180,17 +183,25 @@ architecture = [Input(3),
 
 model = Network(architecture)
 
+for l in model.architecture[1:]:
+    print(l.params)
+    print(l.grads)
+
 X = np.array([[1, 0, 1],
               [3, 2, 2],
               [0, 9, 1]])
 res = model.forward(X)
-print(res)
+print(f"prediction = {res}")
+print(f"model params = {model.params}")
 
 y_ = np.array([[1], [0], [1]])
 
 g = model.gradient(X, y_, res)
 print(g)
+print(f"model grads = {model.gradients}")
 
 model.train(X, y_)
 
-print(model.predict(X))
+# print(model.predict(X))
+
+print(model.params)

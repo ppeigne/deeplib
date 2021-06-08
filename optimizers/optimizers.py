@@ -25,10 +25,12 @@ class Optimizer_():
             
             results = model.predict(X) #, self.model.params)
             #print("results = ", results)
-            gradient = model.gradient(X, y, results)
+            # gradient = model.gradient(X, y, results)        
+            model.gradient(X, y, results)
+            print(model.gradients)
             #if self.epoch % 10000 == 0:
             #    print("gradient: ", self.update(self.model.params, gradient, learning_rate, learning_rate_decay))
-            model.params = self.update(model.params, gradient, learning_rate, learning_rate_decay)
+            model.params = self.update(model.params, model.gradients, learning_rate, learning_rate_decay)
         return model
 
 
@@ -55,11 +57,13 @@ class Optimizer_():
                     param_update = self._update_rule(gradient, l, param, learning_rate ** self.epoch)
                 else:
                     param_update = self._update_rule(gradient, l, param, learning_rate)
+                print('updagte', param_update)
+                print('param', params[l][param])
                 params[l][param] += param_update
         return params
 
     def _update_rule(self, gradient,l, param, learning_rate):
-        return - gradient[l][param] * learning_rate
+        return - gradient[l][f'd{param}'] * learning_rate
 
     # def update(self, params, gradient, learning_rate, learning_rate_decay):
     #     params_num = len(params)
