@@ -4,6 +4,7 @@ class Optimizer_():
     def __init__(self,batch_size=-1):
         #self.model = model
         self.epoch = 0
+        self.batch_size = batch_size
         self.optimize = self.batch_optimization if batch_size == -1 else self.minibatch_optimization
     # def batch_optimization(self, X, y, n_cycles, learning_rate, learning_rate_decay=False):
     #     for self.epoch in range(n_cycles):
@@ -31,15 +32,15 @@ class Optimizer_():
         return model
 
 
-    def minibatch_optimization(self, model, X, y, n_cycles, batch_size, learning_rate, learning_rate_decay=False):
+    def minibatch_optimization(self, model, X, y, n_cycles=10000, learning_rate=0.1, learning_rate_decay=False):
         m, _ = X.shape
         for self.epoch in range(n_cycles):
-            for t in range(m // batch_size):
-                mini_batch = X[:, batch_size * t:batch_size * (t + 1)]     
+            for t in range(m // self.batch_size):
+                mini_batch = X[:, self.batch_size * t:self.batch_size * (t + 1)]     
                 results = model.forward(mini_batch, model.params)
                 gradient = model.backward(mini_batch, results)
                 model.params = self.update(model.params, gradient, learning_rate, learning_rate_decay)
-            rest = m % batch_size
+            rest = m % self.batch_size
             if rest != 0:
                 final_batch = X[:, -rest:]
                 results = model.forward(final_batch, model.params)

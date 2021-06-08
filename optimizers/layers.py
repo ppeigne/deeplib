@@ -6,8 +6,6 @@ from optimizers.activations import *
 class Layer():
     def __init__(self, n_units):#, initialization=None):
         self.n_units = n_units
-        #self.activation = self._select_activation(activation)
-        #self.initialization = initialization if initialization else self._select_initialization(self)
 
     def _select_activation(self, activation):
         raise NotImplementedError
@@ -35,36 +33,24 @@ class DeepLayer(Layer):
     def _select_activation(self, activation):
         activations = {
             # 'sigmoid': sigmoid,
-            # 'tanh'; ,
             'relu': relu
             # 'leaky_relu': leaky_relu,
-            # 'lrelu': ,
-            # 'prelu': ,
-            # 'elu': ,
         }
         return activations[activation]
 
     def _select_activation_prime(self, activation):
         activations = {
             # 'sigmoid': sigmoid_prime,
-            # 'tanh'; ,
             'relu': relu_prime
             # 'leaky_relu': leaky_relu,
-            # 'lrelu': ,
-            # 'prelu': ,
-            # 'elu': ,
         }
         return activations[activation]
 
     def _select_initialization(self, activation):
         initializations = {
             # 'sigmoid': initialize_tanh,
-            # 'tanh'; initialize_tanh,
             'relu': initialize_relu
             # 'leaky_relu': ,
-            # 'lrelu': ,
-            # 'prelu': ,
-            # 'elu': ,
         }
         return initializations[activation]
 
@@ -88,7 +74,7 @@ class Dense(DeepLayer):
             'db': np.zeros(1),
             'dZ': np.zeros(self.n_units),
             'dA': np.zeros(self.n_units),
-            'dg': self.activation # FIXME 
+            'dg': self.activation_prime  
         } 
         return self.params, self.grads
 
@@ -111,12 +97,12 @@ class Dense(DeepLayer):
 
 
 class Flatten(Layer):
-    def __init__(self, input_dim: Tuple[int, int]) -> None:
-        self.n_units = input_dim[0] * input_dim[1]
+    def __init__(self, n_units: Tuple[int, int]) -> None:
+        self.n_units = n_units[0] * n_units[1]
 
 class Input(Layer):
-    def __init__(self, input_dim: int) -> None:
-        self.n_units = input_dim
+    def __init__(self, n_units: int) -> None:
+        self.n_units = n_units
     
     def _generate_params(self, input_dim):
         parameters = {'A': np.zeros(self.n_units)}
@@ -124,8 +110,8 @@ class Input(Layer):
         return parameters, gradients
 
 class Output(Layer):
-    def __init__(self, input_dim: int) -> None:
-        self.n_units = input_dim
+    def __init__(self, n_units: int) -> None:
+        self.n_units = n_units
 
     def _generate_params(self, input_dim):
         parameters = {'A': np.zeros(self.n_units)}
@@ -139,10 +125,17 @@ class Output(Layer):
         return 1
 
 class Network():
-    def __init__(self, architecture):
+    def __init__(self, architecture, loss='cross_entropy'):
         self.depth = len(architecture)
         self.architecture = architecture
         self.params, self.gradients = self._generate_params()
+        self.loss, self.loss_prime = self._select_loss(loss)
+
+    def _select_loss(self, loss):
+        losses = {
+            'cross_entropy' : (None, None)
+        }
+        return losses[loss]  
 
     # def _generate_params(self, architecture):
     #     for l in range(self.depth):
@@ -165,10 +158,10 @@ class Network():
             layer_input = self.architecture[l].forward(layer_input)
         return layer_input
     
-    def gradient(self, X, y, result):
+    def gradient(self, X, y_true, y_pred):
         _, m = X.shape
-        dA = self.architecture[self.depth - 1].backward()#gradient # FIXME
-        for l in range(self.depth - 1, 0):
+        dA = self.loss_prime(y_true, y_pred) #self.architecture[self.depth - 1].backward()#gradient # FIXME
+        for l in range(self.depth - 1, -1):
             dA = self.architecture[l].backward(dA, m)
         return dA
 
