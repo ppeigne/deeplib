@@ -108,6 +108,31 @@ class Dropout(Layer):
     def backward(self, dA: np.ndarray, m: int):
         return dA * self.drop_matrix / (1. - self.keep_prob)
 
+class BatchNormalization(Layer):
+    def __init__(self):
+        pass
+
+    def _generate_params(self, input_dim: int):
+        self.params = {
+            'gamma': 0,
+            'beta': 0
+        }
+        self.grads = {
+            'dgamma': 0,
+            'dbeta': 0 
+        } 
+        return self.params, self.grads
+
+    def forward(self, A_prev: np.ndarray, eps: float = 1e-10):
+        mu = A_prev.mean(axis=0)
+        variance = A_prev.variance(axis=0)
+        X_norm = (A_prev - mu) / (variance + eps) 
+        return (self.params['gamma'] * X_norm) + self.params['beta']
+
+    def backward(self, dA: np.ndarray):
+        self.params['gamma'] = dA
+        self.params['beta'] = np.sum(dA, axis=1, keepdims=True)
+        
 
 class Flatten(Layer):
     def __init__(self, n_units: Tuple[int, int]) -> None:
