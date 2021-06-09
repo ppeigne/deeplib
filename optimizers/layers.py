@@ -1,12 +1,12 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, List
 from initialization import  * #initialize_relu
 from activations import * #relu, relu_prime
 from optimizers import Optimizer_
 
 
 class Layer():
-    def __init__(self, n_units):#, initialization=None):
+    def __init__(self, n_units: int):#, initialization=None):
         self.n_units = n_units
 
     def _select_activation(self, activation):
@@ -17,13 +17,13 @@ class Layer():
 
 
 class DeepLayer(Layer):
-    def __init__(self, n_units, activation='relu'):
+    def __init__(self, n_units: int, activation: str = 'relu'):
         self.n_units = n_units
         self.activation = self._select_activation(activation)
         self.activation_prime = self._select_activation_prime(activation)
         self.initialization = self._select_initialization(activation)
 
-    def _select_activation(self, activation):
+    def _select_activation(self, activation: str):
         activations = {
             'sigmoid': sigmoid,
             'relu': relu,
@@ -32,7 +32,7 @@ class DeepLayer(Layer):
         }
         return activations[activation]
 
-    def _select_activation_prime(self, activation):
+    def _select_activation_prime(self, activation: str):
         activations = {
             'sigmoid': sigmoid_prime,
             'relu': relu_prime,
@@ -41,7 +41,7 @@ class DeepLayer(Layer):
         }
         return activations[activation]
 
-    def _select_initialization(self, activation):
+    def _select_initialization(self, activation: str):
         initializations = {
             'sigmoid': initialize_sigmoid,
             'relu': initialize_relu,
@@ -52,35 +52,35 @@ class DeepLayer(Layer):
 
 
 class Dense(DeepLayer):
-    def _init__(self, n_units, activation):
+    def _init__(self, n_units: int, activation: str = 'relu'):
         super().__init__(self, n_units, activation)
         self.params = None
         self.grads = None
 
-    def _generate_params(self, input_dim):
+    def _generate_params(self, input_dim: int):
         self.params = {
             'W': self.initialization((self.n_units, input_dim)),
             'b': np.zeros(1),
-            'Z': np.zeros(self.n_units),
-            'A': np.zeros(self.n_units),
+            'Z': None, #np.zeros(self.n_units),
+            'A': None, #np.zeros(self.n_units),
             'g': self.activation
         }
         self.grads = {
             'dW': np.zeros((self.n_units, input_dim)),
             'db': np.zeros(1),
-            'dZ': np.zeros(self.n_units),
-            'dA': np.zeros(self.n_units),
+            'dZ': None, #np.zeros(self.n_units),
+            'dA': None, #np.zeros(self.n_units),
             'dg': self.activation_prime  
         } 
         return self.params, self.grads
 
-    def forward(self, A_prev):
+    def forward(self, A_prev: np.ndarray):
         self.A_prev = A_prev
         self.params['Z'] = self.params['W'] @ A_prev + self.params['b']
         self.params['A'] = self.params['g'](self.params['Z'])
         return self.params['A'] 
 
-    def backward(self, dA, m):
+    def backward(self, dA: np.ndarray, m: int):
         self.grads['dZ'] = dA * self.params['dg'](self.params['Z']) 
         self.grads['dW'] = self.grads['dZ'] @ self.A_prev.T / m 
         self.grads['db'] = np.sum(self.grads['dZ'], axis=1, keepdims=True) / m
@@ -92,39 +92,39 @@ class Flatten(Layer):
     def __init__(self, n_units: Tuple[int, int]) -> None:
         self.n_units = n_units[0] * n_units[1]
 
-class Input(Layer):
-    def __init__(self, n_units: int) -> None:
-        self.n_units = n_units
-        # self.params, self.gradients = self._generate_params()
+# class Input(Layer):
+#     def __init__(self, n_units: int) -> None:
+#         self.n_units = n_units
+#         # self.params, self.gradients = self._generate_params()
     
-    def _generate_params(self, input_dim):
-        parameters = {'A': np.zeros(self.n_units)}
-        gradients = {'dA': np.zeros(self.n_units)}
-        return parameters, gradients
+#     def _generate_params(self, input_dim):
+#         parameters = {'A': np.zeros(self.n_units)}
+#         gradients = {'dA': np.zeros(self.n_units)}
+#         return parameters, gradients
 
-class Output(Layer):
-    def __init__(self, n_units: int) -> None:
-        self.n_units = n_units
+# class Output(Layer):
+#     def __init__(self, n_units: int) -> None:
+#         self.n_units = n_units
 
-    def _generate_params(self, input_dim):
-        parameters = {'A': np.zeros(self.n_units)}
-        gradients = {'dA': np.zeros(self.n_units)}
-        return parameters, gradients
+#     def _generate_params(self, input_dim):
+#         parameters = {'A': np.zeros(self.n_units)}
+#         gradients = {'dA': np.zeros(self.n_units)}
+#         return parameters, gradients
     
-    def forward(self, x):
-        return 1
+#     def forward(self, x):
+#         return 1
 
-    def backward(self):
-        return 1
+#     def backward(self):
+#         return 1
 
 class Network():
-    def __init__(self, architecture, loss='cross_entropy'):
+    def __init__(self, architecture: List[Layer], loss: str ='cross_entropy'):
         self.depth = len(architecture)
         self.architecture = architecture
         self.params, self.gradients = self._generate_params()
         self.loss, self.loss_prime = self._select_loss(loss)
 
-    def _select_loss(self, loss):
+    def _select_loss(self, loss: str):
         losses = {
             'cross_entropy' : (None, lambda y_true, y_pred: y_true - y_pred)
         }
@@ -140,23 +140,23 @@ class Network():
             gradients.append(tmp_gradients)
         return params, gradients  
 
-    def predict(self, X):
+    def predict(self, X: np.ndarray):
         return self.forward(X)
 
-    def forward(self, X):
+    def forward(self, X: np.ndarray):
         layer_input = X
         for l in range(1, self.depth):
             layer_input = self.architecture[l].forward(layer_input)
         return layer_input
     
-    def gradient(self, X, y_true, y_pred):
+    def gradient(self, X: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray):
         _, m = X.shape
         dA = self.loss_prime(y_true, y_pred) #self.architecture[self.depth - 1].backward()#gradient # FIXME
         for l in range(self.depth - 1, -1):
             dA = self.architecture[l].backward(dA, m)
         return dA
 
-    def train(self, X, y, verbose=False):
+    def train(self, X: np.ndarray, y: np.ndarray, verbose=False):
         optimizer = Optimizer_()
         optimizer.optimize(self, X, y)
 
