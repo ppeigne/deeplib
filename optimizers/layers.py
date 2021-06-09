@@ -60,32 +60,35 @@ class Dense(DeepLayer):
     def _generate_params(self, input_dim: int):
         self.params = {
             'W': self.initialization((self.n_units, input_dim)),
-            'b': np.zeros(1),
-            'Z': None, #np.zeros(self.n_units),
-            'A': None, #np.zeros(self.n_units),
-            'g': self.activation
+            'b': np.zeros(1)
         }
         self.grads = {
             'dW': np.zeros((self.n_units, input_dim)),
-            'db': np.zeros(1),
+            'db': np.zeros(1)
+        } 
+        self.cache = {
+            'Z': None, #np.zeros(self.n_units),
+            'A': None, #np.zeros(self.n_units),
+            'g': self.activation,
             'dZ': None, #np.zeros(self.n_units),
             'dA': None, #np.zeros(self.n_units),
             'dg': self.activation_prime  
-        } 
+        }
         return self.params, self.grads
 
     def forward(self, A_prev: np.ndarray):
-        self.A_prev = A_prev
-        self.params['Z'] = self.params['W'] @ A_prev + self.params['b']
-        self.params['A'] = self.params['g'](self.params['Z'])
-        return self.params['A'] 
+        # A_prev = A_prev
+        self.cache['Z'] = self.params['W'] @ A_prev + self.params['b']
+        self.cache['A'] = self.cache['g'](self.cache['Z'])
+        return self.cache['A'] 
 
     def backward(self, dA: np.ndarray, m: int):
-        self.grads['dZ'] = dA * self.params['dg'](self.params['Z']) 
-        self.grads['dW'] = self.grads['dZ'] @ self.A_prev.T / m 
-        self.grads['db'] = np.sum(self.grads['dZ'], axis=1, keepdims=True) / m
-        self.grads['dA'] = self.params['W'].T @ self.grads['dZ']
-        return self.grads['dA']
+        self.cache['dZ'] = dA * self.cache['dg'](self.cache['Z']) 
+        self.grads['dW'] = self.cache['dZ'] @ self.A_prev.T / m 
+        self.grads['db'] = np.sum(self.cache['dZ'], axis=1, keepdims=True) / m
+        self.cache['dA'] = self.params['W'].T @ self.cache['dZ']
+        return self.cache['dA']
+
 
 class Dropout(Layer):
     def __init__(self, keep_prob: int = .5):
@@ -95,14 +98,14 @@ class Dropout(Layer):
         self.grads = {}
     
     def _generate_params(self, input_dim: int):
-        self.params['drop_matrix'] = None
+        self.cache = {'drop_matrix': None}
         self.n_units = input_dim
         return self.params, self.grads
 
     def forward(self, A_prev: np.ndarray):
         if self.training:
-            self.params['drop_matrix'] = np.random.uniform(0, 1,  A_prev.shape) < self.keep_prob
-            return A_prev * self.params['drop_matrix'] / (1. - self.keep_prob)
+            self.cache['drop_matrix'] = np.random.uniform(0, 1,  A_prev.shape) < self.keep_prob
+            return A_prev * self.cache['drop_matrix'] / (1. - self.keep_prob)
         return A_prev
     
     def backward(self, dA: np.ndarray, m: int):
@@ -132,7 +135,7 @@ class BatchNormalization(Layer):
     def backward(self, dA: np.ndarray):
         self.params['gamma'] = dA
         self.params['beta'] = np.sum(dA, axis=1, keepdims=True)
-        
+
 
 class Flatten(Layer):
     def __init__(self, n_units: Tuple[int, int]) -> None:
@@ -208,8 +211,8 @@ class Network():
 
 
 
-            
-    
+# x = Dense(3)  
+# print(x.cache)
 
 architecture = [Dense(3, activation='relu'), 
                 Dropout(keep_prob=.8),
@@ -219,26 +222,26 @@ architecture = [Dense(3, activation='relu'),
 
 model = Network(architecture)
 
-for l in model.architecture[1:]:
-    print(l)
-    print(l.params)
-    print(l.grads, end='\n\n')
+# # for l in model.architecture[1:]:
+# #     print(l)
+# #     print(l.params)
+# #     print(l.grads, end='\n\n')
 
 X = np.array([[1, 0, 1],
               [3, 2, 2],
               [0, 9, 1]])
-res = model.forward(X)
-print(f"prediction = {res}")
-print(f"model params = {model.params}")
+# res = model.forward(X)
+# print(f"prediction = {res}")
+# print(f"model params = {model.params}")
 
 y_ = np.array([[1], [0], [1]])
 
-g = model.gradient(X, y_, res)
-print(g)
-print(f"model grads = {model.gradients}")
+# g = model.gradient(X, y_, res)
+# print(g)
+# print(f"model grads = {model.gradients}")
 
 model.train(X, y_)
 
-# print(model.predict(X))
+print(model.predict(X))
 
 print(model.params)

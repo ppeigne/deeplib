@@ -45,13 +45,12 @@ class Optimizer_():
     def update(self, params: List[dict], gradient: List[dict], 
                 learning_rate: float, learning_rate_decay: bool):
         for l in range(1, len(params)):
-            for param in ['W', 'b']:
-                if param in params[l].keys():
-                    if learning_rate_decay: 
-                        param_update = self._update_rule(gradient, l, param, learning_rate ** self.epoch)
-                    else:
-                        param_update = self._update_rule(gradient, l, param, learning_rate)
-                    params[l][param] += param_update
+            for param in params[l].keys():
+                if learning_rate_decay: 
+                    param_update = self._update_rule(gradient, l, param, learning_rate ** self.epoch)
+                else:
+                    param_update = self._update_rule(gradient, l, param, learning_rate)
+                params[l][param] += param_update
         return params
 
     def _update_rule(self, gradient,l, param, learning_rate):
