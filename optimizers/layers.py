@@ -87,6 +87,27 @@ class Dense(DeepLayer):
         self.grads['dA'] = self.params['W'].T @ self.grads['dZ']
         return self.grads['dA']
 
+class Dropout(Layer):
+    def __init__(self, keep_prob: int = .5):
+        self.keep_prob = keep_prob
+        self.training = True
+        self.params = {}
+        self.grads = {}
+    
+    def _generate_params(self, input_dim: int):
+        self.params['drop_matrix'] = None
+        self.n_units = input_dim
+        return self.params, self.grads
+
+    def forward(self, A_prev: np.ndarray):
+        if self.training:
+            self.params['drop_matrix'] = np.random.uniform(0, 1,  A_prev.shape) < self.keep_prob
+            return A_prev * self.params['drop_matrix'] / (1. - self.keep_prob)
+        return A_prev
+    
+    def backward(self, dA: np.ndarray, m: int):
+        return dA * self.drop_matrix / (1. - self.keep_prob)
+
 
 class Flatten(Layer):
     def __init__(self, n_units: Tuple[int, int]) -> None:
@@ -166,7 +187,9 @@ class Network():
     
 
 architecture = [Dense(3, activation='relu'), 
+                Dropout(keep_prob=.8),
                 Dense(8), 
+                Dropout(keep_prob=.8),
                 Dense(1, activation='sigmoid')] 
 
 model = Network(architecture)

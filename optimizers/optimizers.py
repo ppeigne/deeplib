@@ -1,12 +1,17 @@
 import numpy as np
+#from layers import Network
+from typing import Tuple, List
+
 
 class Optimizer_():
-    def __init__(self,batch_size=-1):
+    def __init__(self, batch_size: int = -1):
         self.epoch = 0
         self.batch_size = batch_size
         self.optimize = self.batch_optimization if batch_size == -1 else self.minibatch_optimization
 
-    def batch_optimization(self, model, X, y, n_cycles=10000, learning_rate=0.1, learning_rate_decay=False):
+    def batch_optimization(self, model, X: np.ndarray, y: np.ndarray, 
+                            n_cycles: int = 10000, learning_rate: float = 0.1, 
+                            learning_rate_decay: bool = False):
         # print("in optimization:")
         for self.epoch in range(n_cycles):
             #if self.epoch % 10000 == 0:
@@ -19,7 +24,9 @@ class Optimizer_():
         return model
 
 
-    def minibatch_optimization(self, model, X, y, n_cycles=10000, learning_rate=0.1, learning_rate_decay=False):
+    def minibatch_optimization(self, model, X: np.ndarray, y: np.ndarray, 
+                                n_cycles: int = 10000, learning_rate: float = 0.1, 
+                                learning_rate_decay: bool = False):
         m, _ = X.shape
         for self.epoch in range(n_cycles):
             for t in range(m // self.batch_size):
@@ -35,14 +42,16 @@ class Optimizer_():
                 model.params = self.update(model.params, gradient, learning_rate, learning_rate_decay)
         return model
 
-    def update(self, params, gradient, learning_rate, learning_rate_decay):
+    def update(self, params: List[dict], gradient: List[dict], 
+                learning_rate: float, learning_rate_decay: bool):
         for l in range(1, len(params)):
             for param in ['W', 'b']:
-                if learning_rate_decay: 
-                    param_update = self._update_rule(gradient, l, param, learning_rate ** self.epoch)
-                else:
-                    param_update = self._update_rule(gradient, l, param, learning_rate)
-                params[l][param] += param_update
+                if param in params[l].keys():
+                    if learning_rate_decay: 
+                        param_update = self._update_rule(gradient, l, param, learning_rate ** self.epoch)
+                    else:
+                        param_update = self._update_rule(gradient, l, param, learning_rate)
+                    params[l][param] += param_update
         return params
 
     def _update_rule(self, gradient,l, param, learning_rate):
