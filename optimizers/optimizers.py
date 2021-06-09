@@ -76,7 +76,7 @@ class MomentumOptimizer(Optimizer):
         self.update_params[l][param] *= self.beta 
         self.update_params[l][param] += self.gamma * gradient[l][f'd{param}']
         if self.bias_correction: 
-            self.update_params[l][param] / (1 - (self.beta ** self.epoch))
+            self.update_params[l][param] / (1 - (self.beta ** self.epoch) + 1e-8)
         return - self.update_params[l][param] * learning_rate
 
 
@@ -97,24 +97,38 @@ class RMSOptimizer(Optimizer):
         self.update_params[l][param] *= self.beta 
         self.update_params[l][param] += (1 - self.beta) * (gradient[l][f'd{param}']**2)
         if self.bias_correction: 
-            self.update_params[l][param] / (1 - (self.beta ** self.epoch))
+            self.update_params[l][param] / (1 - (self.beta ** self.epoch) + 1e-8)
         return - gradient[l][f'd{param}'] / (self.update_params[l][param] + 1e-8) * learning_rate
 
 
 class AdamOptimizer(Optimizer):
-    def __init__(self, beta1=0.9, beta2=0.99):
-        self.beta1 = beta1
-        self.beta2 = beta2
+    def __init__(self, batch_size=-1, beta1=0.9, beta2=0.99):
+        super().__init__(batch_size)
+        self.beta = (beta1, beta2)
+        self.update_params = []
+        
 
-    def _update_rule(self, gradient, p, l):
+    def _generate_params(self, model_params: List[dict]):
+        for l in range(len(model_params)):
+            self.update_params.append({})
+            for param in model_params[l].keys():
+                self.update_params[l][param] = [np.zeros_like(model_params[l][param]), 
+                                                np.zeros_like(model_params[l][param])]
+    
+    def _update_rule(self, gradient,l, param, learning_rate):
+        print(self.epoch)
+        print(self.beta[0])
+        print((self.beta[0] ** self.epoch))
+        print(1 -(self.beta[0] ** self.epoch))
+
         # Momentum part
-        self.update_param[p][l][0] *= self.beta[0] 
-        self.update_param[p][l][0] += (1 - self.beta[0]) * gradient
-        momentum_corrected = self.update_param[p][l][0] / (1 - (self.beta[0] ** self.epoch))
+        self.update_params[l][param][0] *= self.beta[0] 
+        self.update_params[l][param][0] += (1 - self.beta[0]) * gradient[l][f'd{param}']
+        momentum_corrected = self.update_params[l][param][0] / (1 - (self.beta[0] ** self.epoch) + 1e-8)
         # RMS part
-        self.update_param[p][l][1] *= self.beta[1] 
-        self.update_param[p][l][1] += (1 - self.beta[1]) * (gradient ** 2)
-        rms_corrected = self.update_param[p][l][1] / (1 - (self.beta[1] ** self.epoch))
-        return momentum_corrected / (np.sqrt(rms_corrected + 10e-8))
+        self.update_params[l][param][1] *= self.beta[1] 
+        self.update_params[l][param][1] += (1 - self.beta[1]) * (gradient[l][f'd{param}']**2)
+        rms_corrected = self.update_params[l][param][1] / (1 - (self.beta[1] ** self.epoch) + 1e-8)
+        return - momentum_corrected / (np.sqrt(rms_corrected + 10e-8)) * learning_rate
         
 

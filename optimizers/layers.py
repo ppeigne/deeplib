@@ -2,7 +2,7 @@ import numpy as np
 from typing import Tuple, List
 from initialization import  * #initialize_relu
 from activations import * #relu, relu_prime
-from optimizers import RMSOptimizer #Optimizer, MomentumOptimizer
+from optimizers import AdamOptimizer #Optimizer, MomentumOptimizer
 
 
 class Layer():
@@ -210,7 +210,7 @@ class Network():
         return dA
 
     def train(self, X: np.ndarray, y: np.ndarray, verbose=False):
-        optimizer = RMSOptimizer()
+        optimizer = AdamOptimizer()
         optimizer.optimize(self, X, y)
 
 
