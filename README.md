@@ -13,15 +13,15 @@ This library is not made to replace deep learning frameworks in any way, but non
 
 ## Layers
 ### *MLP [in progress]*
-- [ ] Dense
-- [ ] Dropout
+- [x] Dense
+- [x] Dropout
 - [ ] Blocks
 - [ ] BatchNormalization
 
 ### *Activations [in progress]*
-- [ ] Sigmoid
+- [x] Sigmoid
 - [ ] Thanh
-- [ ] ReLU
+- [x] ReLU
 - [ ] Shifted ReLU
 - [ ] Leaky ReLU
 - [ ] Exponential LU
@@ -34,9 +34,9 @@ This library is not made to replace deep learning frameworks in any way, but non
 ### *RNN [coming later]*
 
 ## *Optimizers [in progress]*
-- [ ] Gradient Descent
-- [ ] Batch Gradient Descent
-- [ ] Stochastic Gradient Descent
+- [x] Gradient Descent
+- [x] Batch Gradient Descent
+- [x] Stochastic Gradient Descent
 - [ ] Momentum
 - [ ] Nesterov Momentum
 - [ ] RMSProp
