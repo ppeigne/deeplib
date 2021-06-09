@@ -2,32 +2,17 @@ import numpy as np
 
 class Optimizer_():
     def __init__(self,batch_size=-1):
-        #self.model = model
         self.epoch = 0
         self.batch_size = batch_size
         self.optimize = self.batch_optimization if batch_size == -1 else self.minibatch_optimization
-    # def batch_optimization(self, X, y, n_cycles, learning_rate, learning_rate_decay=False):
-    #     for self.epoch in range(n_cycles):
-    #         #if self.epoch % 10000 == 0:
-    #         #    print("update: ", self.model.params)
-    #         results = self.model.forward(X) #, self.model.params)
-    #         gradient = self.model.backward(X, y, results)
-    #         #if self.epoch % 10000 == 0:
-    #         #    print("gradient: ", self.update(self.model.params, gradient, learning_rate, learning_rate_decay))
-    #         self.model.params = self.update(self.model.params, gradient, learning_rate, learning_rate_decay)
-    #     return self.model
 
     def batch_optimization(self, model, X, y, n_cycles=10000, learning_rate=0.1, learning_rate_decay=False):
-        print("in optimization:")
+        # print("in optimization:")
         for self.epoch in range(n_cycles):
             #if self.epoch % 10000 == 0:
-            #    print("update: ", self.model.params)
-            
+            #    print("update: ", self.model.params)            
             results = model.predict(X) #, self.model.params)
-            #print("results = ", results)
-            # gradient = model.gradient(X, y, results)        
             model.gradient(X, y, results)
-            print(model.gradients)
             #if self.epoch % 10000 == 0:
             #    print("gradient: ", self.update(self.model.params, gradient, learning_rate, learning_rate_decay))
             model.params = self.update(model.params, model.gradients, learning_rate, learning_rate_decay)
@@ -51,34 +36,17 @@ class Optimizer_():
         return model
 
     def update(self, params, gradient, learning_rate, learning_rate_decay):
-        for l in range(len(params)):
-            for param in params[l].keys():
+        for l in range(1, len(params)):
+            for param in ['W', 'b']:
                 if learning_rate_decay: 
                     param_update = self._update_rule(gradient, l, param, learning_rate ** self.epoch)
                 else:
                     param_update = self._update_rule(gradient, l, param, learning_rate)
-                print('updagte', param_update)
-                print('param', params[l][param])
                 params[l][param] += param_update
         return params
 
     def _update_rule(self, gradient,l, param, learning_rate):
         return - gradient[l][f'd{param}'] * learning_rate
-
-    # def update(self, params, gradient, learning_rate, learning_rate_decay):
-    #     params_num = len(params)
-    #     for p in range(params_num):
-    #         layers_num = len(params[p])
-    #         for l in range(layers_num[p]):
-    #             param_update = self._update_rule(gradient[p][l], p, l)
-    #             if learning_rate_decay:
-    #                 params[p][l] -= (learning_rate ** self.epoch) * param_update
-    #             else:
-    #                 params[p][l] -= learning_rate * param_update
-    #     return params
-
-    # def _update_rule(self, gradient, p, l):
-    #     return gradient
 
 
 class MomentumOptimizer_(Optimizer_):

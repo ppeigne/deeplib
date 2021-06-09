@@ -86,10 +86,6 @@ class Dense(DeepLayer):
         self.grads['db'] = np.sum(self.grads['dZ'], axis=1, keepdims=True) / m
         self.grads['dA'] = self.params['W'].T @ self.grads['dZ']
         return self.grads['dA']
- 
-    # def update(self, update_rule):
-    #     for k in self.params.keys():
-    #         self.params[k] = update_rule(self.params[k], self.grads[f"d{k}"])
 
 
 class Flatten(Layer):
@@ -100,7 +96,6 @@ class Input(Layer):
     def __init__(self, n_units: int) -> None:
         self.n_units = n_units
         # self.params, self.gradients = self._generate_params()
-
     
     def _generate_params(self, input_dim):
         parameters = {'A': np.zeros(self.n_units)}
@@ -135,16 +130,10 @@ class Network():
         }
         return losses[loss]  
 
-    # def _generate_params(self, architecture):
-    #     for l in range(self.depth):
-    #         input_dim = architecture[l-1].n_units
-    #         architecture[l]._generate_params(input_dim)
-
     def _generate_params(self):
         params = []
         gradients = []
         for l in range(1, self.depth):
-            print(l)
             input_dim = self.architecture[l-1].n_units
             tmp_params, tmp_gradients = self.architecture[l]._generate_params(input_dim)
             params.append(tmp_params)
@@ -176,16 +165,16 @@ class Network():
             
     
 
-architecture = [Input(3), 
-                Dense(2, activation='relu'), 
+architecture = [Dense(3, activation='relu'), 
                 Dense(8), 
                 Dense(1, activation='sigmoid')] 
 
 model = Network(architecture)
 
 for l in model.architecture[1:]:
+    print(l)
     print(l.params)
-    print(l.grads)
+    print(l.grads, end='\n\n')
 
 X = np.array([[1, 0, 1],
               [3, 2, 2],
