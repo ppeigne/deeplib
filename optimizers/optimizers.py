@@ -1,25 +1,25 @@
 import numpy as np
 #from layers import Network
 from typing import Tuple, List
+import copy
 
 
-class Optimizer_():
+class Optimizer():
     def __init__(self, batch_size: int = -1):
         self.epoch = 0
         self.batch_size = batch_size
         self.optimize = self.batch_optimization if batch_size == -1 else self.minibatch_optimization
 
+    def _generate_params(self, model_params):
+        pass
+
     def batch_optimization(self, model, X: np.ndarray, y: np.ndarray, 
                             n_cycles: int = 10000, learning_rate: float = 0.1, 
                             learning_rate_decay: bool = False):
-        # print("in optimization:")
+        self._generate_params(model.params)
         for self.epoch in range(n_cycles):
-            #if self.epoch % 10000 == 0:
-            #    print("update: ", self.model.params)            
-            results = model.predict(X) #, self.model.params)
+            results = model.predict(X)
             model.gradient(X, y, results)
-            #if self.epoch % 10000 == 0:
-            #    print("gradient: ", self.update(self.model.params, gradient, learning_rate, learning_rate_decay))
             model.params = self.update(model.params, model.gradients, learning_rate, learning_rate_decay)
         return model
 
@@ -27,6 +27,7 @@ class Optimizer_():
     def minibatch_optimization(self, model, X: np.ndarray, y: np.ndarray, 
                                 n_cycles: int = 10000, learning_rate: float = 0.1, 
                                 learning_rate_decay: bool = False):
+        self._generate_params(model.params)
         m, _ = X.shape
         for self.epoch in range(n_cycles):
             for t in range(m // self.batch_size):
@@ -57,43 +58,50 @@ class Optimizer_():
         return - gradient[l][f'd{param}'] * learning_rate
 
 
-class MomentumOptimizer_(Optimizer_):
-    def __init__(self, beta=0.9, gamma=None, bias_correction=False):
+class MomentumOptimizer(Optimizer):
+    def __init__(self, batch_size=-1, beta=0.9, gamma=None, bias_correction=False):
+        super().__init__(batch_size)
         self.beta = beta
         self.gamma = gamma if gamma else 1 - beta
         self.bias_correction = bias_correction
-        self.update_param = None
+        self.update_params = []
 
-#################
-    def _generate_update_params_grid(self):
-        update_params_grid = [[]]
-        for p in self.model.params:
-            for l in range(len(p[l])): #FIXME
-                update_params_grid[p][l] = np.zeros()
-#################
+    def _generate_params(self, model_params: List[dict]):
+        for l in range(len(model_params)):
+            self.update_params.append({})
+            for param in model_params[l].keys():
+                self.update_params[l][param] = np.zeros_like(model_params[l][param])
 
-    def _update_rule(self, gradient, p, l):
-        self.update_param[p][l] *= self.beta 
-        self.update_param[p][l] += self.gamma * gradient
+    def _update_rule(self, gradient,l, param, learning_rate):
+        self.update_params[l][param] *= self.beta 
+        self.update_params[l][param] += self.gamma * gradient[l][f'd{param}']
         if self.bias_correction: 
-            self.update_param[p][l] / (1 - (self.beta ** self.epoch))
-        return self.update_param[p][l]
+            self.update_params[l][param] / (1 - (self.beta ** self.epoch))
+        return - self.update_params[l][param] * learning_rate
 
 
-class RMSOptimizer_(Optimizer_):
-    def __init__(self, beta=0.99, gamma=None, bias_correction=False):
+class RMSOptimizer(Optimizer):
+    def __init__(self, batch_size=-1, beta=0.99, bias_correction=False):
+        super().__init__(batch_size)
         self.beta = beta
-        self.gamma = gamma if gamma else 1 - beta
         self.bias_correction = bias_correction
+        self.update_params = []
 
-    def _update_rule(self, gradient, p, l):
-        self.update_param[p][l] *= self.beta 
-        self.update_param[p][l] += (1 - self.beta) * (gradient ** 2)
+    def _generate_params(self, model_params: List[dict]):
+        for l in range(len(model_params)):
+            self.update_params.append({})
+            for param in model_params[l].keys():
+                self.update_params[l][param] = np.zeros_like(model_params[l][param])
+
+    def _update_rule(self, gradient,l, param, learning_rate):
+        self.update_params[l][param] *= self.beta 
+        self.update_params[l][param] += (1 - self.beta) * (gradient[l][f'd{param}']**2)
         if self.bias_correction: 
-            self.update_param[p][l] / (1 - (self.beta ** self.epoch))
-        return gradient / (np.sqrt(self.update_param[p][l] + 10e-8))
+            self.update_params[l][param] / (1 - (self.beta ** self.epoch))
+        return - gradient[l][f'd{param}'] / (self.update_params[l][param] + 1e-8) * learning_rate
 
-class AdamOptimizer_(Optimizer_):
+
+class AdamOptimizer(Optimizer):
     def __init__(self, beta1=0.9, beta2=0.99):
         self.beta1 = beta1
         self.beta2 = beta2

@@ -2,17 +2,17 @@ import numpy as np
 from typing import Tuple, List
 from initialization import  * #initialize_relu
 from activations import * #relu, relu_prime
-from optimizers import Optimizer_
+from optimizers import RMSOptimizer #Optimizer, MomentumOptimizer
 
 
 class Layer():
     def __init__(self, n_units: int):#, initialization=None):
         self.n_units = n_units
 
-    def _select_activation(self, activation):
+    def _select_activation(self, activation: str):
         raise NotImplementedError
 
-    def _select_initilization(self, activation):
+    def _select_initilization(self, activation: str):
         raise NotImplementedError
 
 
@@ -53,7 +53,7 @@ class DeepLayer(Layer):
 
 class Dense(DeepLayer):
     def _init__(self, n_units: int, activation: str = 'relu'):
-        super().__init__(self, n_units, activation)
+        super().__init__(n_units, activation)
         self.params = None
         self.grads = None
 
@@ -77,7 +77,6 @@ class Dense(DeepLayer):
         return self.params, self.grads
 
     def forward(self, A_prev: np.ndarray):
-        # A_prev = A_prev
         self.cache['Z'] = self.params['W'] @ A_prev + self.params['b']
         self.cache['A'] = self.cache['g'](self.cache['Z'])
         return self.cache['A'] 
@@ -123,6 +122,11 @@ class BatchNormalization(Layer):
         self.grads = {
             'dgamma': 0,
             'dbeta': 0 
+        }
+        self.cache = {
+            'mean': 0,
+            'variance': 0, 
+            'X_norm': 0
         } 
         return self.params, self.grads
 
@@ -200,13 +204,13 @@ class Network():
     
     def gradient(self, X: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray):
         _, m = X.shape
-        dA = self.loss_prime(y_true, y_pred) #self.architecture[self.depth - 1].backward()#gradient # FIXME
+        dA = self.loss_prime(y_true, y_pred)
         for l in range(self.depth - 1, -1):
             dA = self.architecture[l].backward(dA, m)
         return dA
 
     def train(self, X: np.ndarray, y: np.ndarray, verbose=False):
-        optimizer = Optimizer_()
+        optimizer = RMSOptimizer()
         optimizer.optimize(self, X, y)
 
 
