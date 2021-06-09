@@ -37,12 +37,12 @@ This library is not made to replace deep learning frameworks in any way, but non
 - [x] Gradient Descent
 - [x] Batch Gradient Descent
 - [x] Stochastic Gradient Descent
-- [ ] Momentum
+- [x] Momentum
 - [ ] Nesterov Momentum
-- [ ] RMSProp
+- [x] RMSProp
 - [ ] AdaGrad
 - [ ] AdaDelta
-- [ ] Adam
+- [x] Adam
 - [ ] NAdam
 
 

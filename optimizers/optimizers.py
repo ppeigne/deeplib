@@ -116,11 +116,6 @@ class AdamOptimizer(Optimizer):
                                                 np.zeros_like(model_params[l][param])]
     
     def _update_rule(self, gradient,l, param, learning_rate):
-        print(self.epoch)
-        print(self.beta[0])
-        print((self.beta[0] ** self.epoch))
-        print(1 -(self.beta[0] ** self.epoch))
-
         # Momentum part
         self.update_params[l][param][0] *= self.beta[0] 
         self.update_params[l][param][0] += (1 - self.beta[0]) * gradient[l][f'd{param}']
