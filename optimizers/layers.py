@@ -76,7 +76,7 @@ class Dense(DeepLayer):
         }
         return self.params, self.grads
 
-    def forward(self, A_prev: np.ndarray):
+    def forward(self, A_prev: np.ndarray, **kwargs):
         self.cache['Z'] = self.params['W'] @ A_prev + self.params['b']
         self.cache['A'] = self.cache['g'](self.cache['Z'])
         return self.cache['A'] 
@@ -92,7 +92,6 @@ class Dense(DeepLayer):
 class Dropout(Layer):
     def __init__(self, keep_prob: int = .5):
         self.keep_prob = keep_prob
-        self.training = True
         self.params = {}
         self.grads = {}
     
@@ -101,7 +100,8 @@ class Dropout(Layer):
         self.n_units = input_dim
         return self.params, self.grads
 
-    def forward(self, A_prev: np.ndarray):
+    def forward(self, A_prev: np.ndarray, training: bool, **kwargs):
+        self.training = training
         if self.training:
             self.cache['drop_matrix'] = np.random.uniform(0, 1,  A_prev.shape) < self.keep_prob
             return A_prev * self.cache['drop_matrix'] / (1. - self.keep_prob)
@@ -130,7 +130,7 @@ class BatchNormalization(Layer):
         } 
         return self.params, self.grads
 
-    def forward(self, A_prev: np.ndarray, eps: float = 1e-10):
+    def forward(self, A_prev: np.ndarray, eps: float = 1e-10, **kwargs):
         mu = A_prev.mean(axis=0)
         variance = A_prev.variance(axis=0)
         X_norm = (A_prev - mu) / (variance + eps) 
@@ -194,12 +194,14 @@ class Network():
         return params, gradients  
 
     def predict(self, X: np.ndarray):
-        return self.forward(X)
+        if self.training:
+            return self.forward(X)
+        return (self.forward(X) > .5) * 1
 
     def forward(self, X: np.ndarray):
         layer_input = X
         for l in range(1, self.depth):
-            layer_input = self.architecture[l].forward(layer_input)
+            layer_input = self.architecture[l].forward(layer_input, training=self.training)
         return layer_input
     
     def gradient(self, X: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray):
@@ -210,42 +212,7 @@ class Network():
         return dA
 
     def train(self, X: np.ndarray, y: np.ndarray, verbose=False):
+        self.training = True
         optimizer = AdamOptimizer()
         optimizer.optimize(self, X, y)
-
-
-
-# x = Dense(3)  
-# print(x.cache)
-
-architecture = [Dense(3, activation='relu'), 
-                Dropout(keep_prob=.8),
-                Dense(8), 
-                Dropout(keep_prob=.8),
-                Dense(1, activation='sigmoid')] 
-
-model = Network(architecture)
-
-# # for l in model.architecture[1:]:
-# #     print(l)
-# #     print(l.params)
-# #     print(l.grads, end='\n\n')
-
-X = np.array([[1, 0, 1],
-              [3, 2, 2],
-              [0, 9, 1]])
-# res = model.forward(X)
-# print(f"prediction = {res}")
-# print(f"model params = {model.params}")
-
-y_ = np.array([[1], [0], [1]])
-
-# g = model.gradient(X, y_, res)
-# print(g)
-# print(f"model grads = {model.gradients}")
-
-model.train(X, y_)
-
-print(model.predict(X))
-
-print(model.params)
+        self.training = False
